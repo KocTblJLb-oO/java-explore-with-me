@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import ru.practicum.ewm.StatsClient;
+import ewm.StatsClient;
 import ru.practicum.ewm.dto.*;
 import ru.practicum.ewm.enums.RequestStatus;
 import ru.practicum.ewm.exception.ValidationException;
