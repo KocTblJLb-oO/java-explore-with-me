@@ -7,7 +7,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.ewm.StatsClient;
+import ewm.StatsClient;
 import ru.practicum.ewm.dto.EventFullDto;
 import ru.practicum.ewm.dto.StatsRequest;
 import ru.practicum.ewm.dto.UpdateEventAdminRequest;
