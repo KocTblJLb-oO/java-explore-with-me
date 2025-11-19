@@ -2,6 +2,7 @@ package ru.practicum.ewm.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.dto.*;
@@ -10,6 +11,7 @@ import ru.practicum.ewm.service.PrivateEventService;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/users/{userId}/events")
 @RequiredArgsConstructor
@@ -21,6 +23,7 @@ public class PrivateEventController {
     @ResponseStatus(HttpStatus.CREATED)
     public EventFullDto createEvent(@PathVariable Long userId,
                                     @RequestBody @Valid NewEventDto newEventDto) {
+        log.info("createEvent. Пользователь: {}, событие: {}", userId, newEventDto);
         return privateEventService.createEvent(userId, newEventDto);
     }
 
@@ -44,6 +47,7 @@ public class PrivateEventController {
     @ResponseStatus(HttpStatus.OK)
     public EventFullDto getUserEventById(@PathVariable Long userId,
                                          @PathVariable Long eventId) {
+        log.info("getUserEventById. Пользователь: {}, событие: {}", userId, eventId);
         return privateEventService.getUserEventById(userId, eventId);
     }
 
@@ -51,6 +55,7 @@ public class PrivateEventController {
     @ResponseStatus(HttpStatus.OK)
     public List<ParticipationRequestDto> getEventRequests(@PathVariable Long userId,
                                                           @PathVariable Long eventId) {
+        log.info("getEventRequests. Пользователь: {}, событие: {}", userId, eventId);
         return participationRequestService.getEventRequests(userId, eventId);
     }
 

@@ -2,6 +2,7 @@ package ru.practicum.ewm.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.dto.NewUserRequest;
@@ -10,6 +11,7 @@ import ru.practicum.ewm.service.UserService;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/admin/users")
 @RequiredArgsConstructor
@@ -21,6 +23,7 @@ public class AdminUserController {
             @RequestParam(required = false) List<Long> ids,
             @RequestParam(defaultValue = "0") int from,
             @RequestParam(defaultValue = "10") int size) {
+        log.info("getUsers. Получение пользователей. Количество ИД: {}, смещение: {}, количество: {}", ids.size(), from, size);
         return userService.getUsers(ids, from, size);
     }
 
@@ -33,6 +36,7 @@ public class AdminUserController {
     @DeleteMapping("/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable Long userId) {
+        log.info("deleteUser. Удаление пользователя: {}", userId);
         userService.deleteUser(userId);
     }
 }

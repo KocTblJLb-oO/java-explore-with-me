@@ -1,6 +1,7 @@
 package ru.practicum.ewm.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CompilationService {
@@ -32,6 +34,7 @@ public class CompilationService {
 
     @Transactional
     public CompilationDto saveCompilation(NewCompilationDto newCompilationDto) {
+        log.info("saveCompilation. Подборка: {}", newCompilationDto);
         if (compilationRepository.existsByTitle(newCompilationDto.getTitle())) {
             throw new ValidationException("Подборка с названием =" + newCompilationDto.getTitle() + " уже существует",
                     HttpStatus.CONFLICT);
@@ -51,6 +54,7 @@ public class CompilationService {
     }
 
     public List<CompilationDto> getCompilations(Boolean pinned, int from, int size) {
+        log.info("getCompilations. Получение подборки. Закреплённые: {}, смещение: {}, количество: {}", pinned, from, size);
         Pageable pageable = PageRequest.of(from / size, size);
         Page<Compilation> compilations;
 
@@ -66,6 +70,7 @@ public class CompilationService {
     }
 
     public CompilationDto getCompilationById(Long compId) {
+        log.info("getCompilation. Получение подборки. ИД: {}", compId);
         Compilation compilation = compilationRepository.findById(compId)
                 .orElseThrow(() -> new ValidationException("Подборка с id=" + compId + " не найдена",
                         HttpStatus.NOT_FOUND));
@@ -74,6 +79,7 @@ public class CompilationService {
 
     @Transactional
     public void deleteCompilation(Long compId) {
+        log.info("deleteCompilation. Удаление подборки с ИД: {}", compId);
         if (!compilationRepository.existsById(compId)) {
             throw new ValidationException("Подборка с id=" + compId + " не найдена", HttpStatus.NOT_FOUND);
         }

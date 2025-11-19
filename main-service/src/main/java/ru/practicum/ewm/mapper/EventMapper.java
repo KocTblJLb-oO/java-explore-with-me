@@ -8,6 +8,7 @@ import ru.practicum.ewm.dto.NewEventDto;
 import ru.practicum.ewm.enums.EventState;
 import ru.practicum.ewm.model.Category;
 import ru.practicum.ewm.model.Event;
+import ru.practicum.ewm.model.User;
 
 import java.util.List;
 import java.util.Objects;
@@ -79,6 +80,24 @@ public class EventMapper {
                 .annotation(newEventDto.getAnnotation())
                 .requestModeration(newEventDto.getRequestModeration())
                 .description(newEventDto.getDescription())
+                .build();
+    }
+
+    public Event toEvent(NewEventDto newEventDto, User initiator, Category category) {
+        return Event.builder()
+                .state(EventState.PENDING)
+                .category(newEventDto.getCategory() == null ? null : Category.builder()
+                        .id(newEventDto.getCategory()).build())
+                .eventDate(newEventDto.getEventDate())
+                .paid(newEventDto.getPaid())
+                .title(newEventDto.getTitle())
+                .location(newEventDto.getLocation())
+                .participantLimit(newEventDto.getParticipantLimit())
+                .annotation(newEventDto.getAnnotation())
+                .requestModeration(newEventDto.getRequestModeration())
+                .description(newEventDto.getDescription())
+                .initiator(initiator)
+                .category(category)
                 .build();
     }
 }

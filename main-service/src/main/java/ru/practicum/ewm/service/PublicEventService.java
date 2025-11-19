@@ -3,6 +3,7 @@ package ru.practicum.ewm.service;
 import io.micrometer.common.util.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -25,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PublicEventService {
@@ -37,6 +39,9 @@ public class PublicEventService {
                                                   LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                                   Boolean isAvailable, EventSort eventSort, int from, int size,
                                                   HttpServletRequest request) {
+        log.info("getEvents. Поиск событий. text: {}, categories: {}, paid: {}, rangeStart: {}, rangeEnd: {}, " +
+                        "onlyAvailable: {}, sort: {}, from: {}, size: {}, request: {}",
+                text, categories, paid, rangeStart, rangeEnd, isAvailable, eventSort, from, size, request);
 
         statsClient.sendHit(new EndpointHitDto("ExploreWithMe", request.getRequestURI(), request.getRemoteAddr(),
                 LocalDateTime.now()));

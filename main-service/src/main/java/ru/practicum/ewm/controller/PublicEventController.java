@@ -2,6 +2,7 @@ package ru.practicum.ewm.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.dto.EventFullDto;
@@ -12,6 +13,7 @@ import ru.practicum.ewm.service.PublicEventService;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/events")
 @RequiredArgsConstructor
@@ -30,6 +32,9 @@ public class PublicEventController {
             @RequestParam(defaultValue = "0") int from,
             @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request) {
+        log.info("getEvents. Поиск событий. text: {}, categories: {}, paid: {}, rangeStart: {}, rangeEnd: {}, " +
+                        "onlyAvailable: {}, sort: {}, from: {}, size: {}, request: {}",
+                text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size, request);
 
         return publicEventService.getPublishedEvents(text, categories, paid,
                 rangeStart, rangeEnd, onlyAvailable, sort, from, size, request);

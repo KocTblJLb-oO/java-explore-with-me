@@ -1,6 +1,7 @@
 package ru.practicum.ewm.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ParticipationRequestService {
@@ -31,6 +33,7 @@ public class ParticipationRequestService {
 
     @Transactional
     public ParticipationRequestDto createRequest(Long userId, Long eventId) {
+        log.info("createRequest. Пользователь: {}, событие: {}", userId, eventId);
         if (!userService.userExists(userId)) {
             throw new ValidationException("Пользователь с id " + userId + " не найден", HttpStatus.NOT_FOUND);
         }
@@ -130,6 +133,7 @@ public class ParticipationRequestService {
     }
 
     public List<ParticipationRequestDto> getUserRequests(Long userId) {
+        log.info("getUserRequests. Пользователь: {}", userId);
         if (!userService.userExists(userId)) {
             throw new ValidationException("Пользователь с id " + userId + " не найден.", HttpStatus.NOT_FOUND);
         }
@@ -141,6 +145,7 @@ public class ParticipationRequestService {
 
     @Transactional
     public ParticipationRequestDto cancelRequest(Long userId, Long requestId) {
+        log.info("cancelRequest. Пользователь: {}, запрос: {}", userId, requestId);
         if (!userService.userExists(userId)) {
             throw new ValidationException("Пользователь с id=" + userId + " не найден.", HttpStatus.NOT_FOUND);
         }
@@ -156,6 +161,7 @@ public class ParticipationRequestService {
     }
 
     public List<ParticipationRequestDto> getEventRequests(Long userId, Long eventId) {
+        log.info("getEventRequests. Пользователь: {}, событие: {}", userId, eventId);
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ValidationException("Событие с id=" + eventId + " не найдено.", HttpStatus.NOT_FOUND));
 

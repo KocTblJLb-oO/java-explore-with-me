@@ -1,6 +1,7 @@
 package ru.practicum.ewm.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -16,14 +17,16 @@ import ru.practicum.ewm.repository.UserRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
 
-    @Transactional(readOnly = true)
     public List<UserDto> getUsers(List<Long> ids, int from, int size) {
+        log.info("getUsers. Получение пользователей. Количество ИД: {}, смещение: {}, количество: {}", ids.size(), from, size);
         Pageable pageable = PageRequest.of(from / size, size);
         List<User> users;
         if (ids == null || ids.isEmpty()) {
@@ -50,13 +53,13 @@ public class UserService {
 
     @Transactional
     public void deleteUser(Long userId) {
+        log.info("deleteUser. Удаление пользователя: {}", userId);
         if (!userRepository.existsById(userId)) {
             throw new ValidationException("Пользователь с id " + userId + " не существует", HttpStatus.NOT_FOUND);
         }
         userRepository.deleteById(userId);
     }
 
-    @Transactional(readOnly = true)
     public boolean userExists(Long userId) {
         return userRepository.existsById(userId);
     }

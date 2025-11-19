@@ -1,6 +1,7 @@
 package ru.practicum.ewm.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,23 +20,25 @@ import ru.practicum.ewm.repository.EventRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
     private final EventRepository eventRepository;
 
-    @Transactional(readOnly = true)
     public List<CategoryDto> getCategories(int from, int size) {
+        log.info("getCategories. Получение категорий. Смещение: {}, количество: {}", from, size);
         Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "id"));
         return categoryRepository.findAll(pageable).stream()
                 .map(categoryMapper::toCategoryDto)
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
     public CategoryDto getCategoryById(Long catId) {
+        log.info("getCategory. Получение категории: {}", catId);
         Category category = categoryRepository.findById(catId)
                 .orElseThrow(() -> new ValidationException("Категория id=" + catId + " не найдена",
                         HttpStatus.NOT_FOUND));
@@ -44,6 +47,7 @@ public class CategoryService {
 
     @Transactional
     public CategoryDto addCategory(NewCategoryDto newCategoryDto) {
+        log.info("addCategory. Категория: {}", newCategoryDto);
         Category category = categoryMapper.toCategory(newCategoryDto);
         try {
             return categoryMapper.toCategoryDto(categoryRepository.save(category));
@@ -55,6 +59,7 @@ public class CategoryService {
 
     @Transactional
     public void deleteCategory(Long catId) {
+        log.info("deleteCategory. Удаление категории с ИД: {}", catId);
         if (!categoryRepository.existsById(catId)) {
             throw new ValidationException("Категория id=" + catId + " не найдена", HttpStatus.NOT_FOUND);
         }
@@ -68,6 +73,7 @@ public class CategoryService {
 
     @Transactional
     public CategoryDto updateCategory(Long catId, CategoryDto categoryDto) {
+        log.info("updateCategory. Новая категория: {}", categoryDto);
         Category category = categoryRepository.findById(catId)
                 .orElseThrow(() -> new ValidationException("Категория id " + catId + " не найдена",
                         HttpStatus.NOT_FOUND));

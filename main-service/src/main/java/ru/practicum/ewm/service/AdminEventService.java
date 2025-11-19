@@ -1,6 +1,7 @@
 package ru.practicum.ewm.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -30,6 +31,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminEventService {
@@ -111,46 +113,13 @@ public class AdminEventService {
 
     @Transactional
     public EventFullDto updateEvent(Long eventId, UpdateEventAdminRequest updateRequest) {
+        log.info("updateEvent. eventId: {}, Обновлённое мероприятие: {}", eventId, updateRequest);
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ValidationException("Событие с id " + eventId + " не найдено",
                         HttpStatus.NOT_FOUND));
 
-        if (updateRequest.getEventDate() != null &&
-                updateRequest.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
-            throw new ValidationException("Дата начала изменяемого события должна быть " +
-                    "не ранее чем за час от текущего времени",
-                    HttpStatus.BAD_REQUEST);
-        }
-
-        if (event.getState() == EventState.PUBLISHED && updateRequest.getStateAction() == StateAction.PUBLISH_EVENT) {
-            throw new ValidationException("Нельзя публиковать уже опубликованное событие", HttpStatus.CONFLICT);
-        }
-
-        if (event.getState() == EventState.CANCELED && updateRequest.getStateAction() == StateAction.PUBLISH_EVENT) {
-            throw new ValidationException("Нельзя опубликовать отклонённое событие", HttpStatus.CONFLICT);
-        }
-
-        if (event.getState() == EventState.PUBLISHED && updateRequest.getStateAction() == StateAction.REJECT_EVENT) {
-            throw new ValidationException("Нельзя отклонить уже опубликованное событие.", HttpStatus.CONFLICT);
-        }
-
-        updateField(updateRequest.getTitle(), event::setTitle);
-        updateField(updateRequest.getAnnotation(), event::setAnnotation);
-        updateField(updateRequest.getDescription(), event::setDescription);
-
-        if (updateRequest.getCategory() != null) {
-            var category = categoryRepository.getCategoryById(updateRequest.getCategory());
-            if (category == null) {
-                throw new ValidationException("Категория с id = " + updateRequest.getCategory() + " не найдена",
-                        HttpStatus.NOT_FOUND);
-            }
-            event.setCategory(category);
-        }
-
-        updateField(updateRequest.getEventDate(), event::setEventDate);
-        updateField(updateRequest.getLocation(), event::setLocation);
-        updateField(updateRequest.getPaid(), event::setPaid);
-        updateField(updateRequest.getParticipantLimit(), event::setParticipantLimit);
+        checkEventUpdate(event, updateRequest);
+        updateEvenField(event, updateRequest);
 
         EventState newState = Optional.ofNullable(updateRequest.getStateAction())
                 .map(statusMap::get)
@@ -183,7 +152,48 @@ public class AdminEventService {
         return dto;
     }
 
+    // ------------------------------------------------
+
     private <T> void updateField(T value, Consumer<T> setter) {
         if (value != null) setter.accept(value);
+    }
+
+    private void checkEventUpdate(Event event, UpdateEventAdminRequest updateRequest) {
+        if (updateRequest.getEventDate() != null &&
+                updateRequest.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
+            throw new ValidationException("Дата начала изменяемого события должна быть " +
+                    "не ранее чем за час от текущего времени", HttpStatus.BAD_REQUEST);
+        }
+
+        if (event.getState() == EventState.PUBLISHED && updateRequest.getStateAction() == StateAction.PUBLISH_EVENT) {
+            throw new ValidationException("Нельзя публиковать уже опубликованное событие", HttpStatus.CONFLICT);
+        }
+
+        if (event.getState() == EventState.CANCELED && updateRequest.getStateAction() == StateAction.PUBLISH_EVENT) {
+            throw new ValidationException("Нельзя опубликовать отклонённое событие", HttpStatus.CONFLICT);
+        }
+
+        if (event.getState() == EventState.PUBLISHED && updateRequest.getStateAction() == StateAction.REJECT_EVENT) {
+            throw new ValidationException("Нельзя отклонить уже опубликованное событие.", HttpStatus.CONFLICT);
+        }
+
+        if (updateRequest.getCategory() != null) {
+            var category = categoryRepository.getCategoryById(updateRequest.getCategory());
+            if (category == null) {
+                throw new ValidationException("Категория с id = " + updateRequest.getCategory() + " не найдена",
+                        HttpStatus.NOT_FOUND);
+            }
+            event.setCategory(category);
+        }
+    }
+
+    private void updateEvenField(Event event, UpdateEventAdminRequest updateRequest) {
+        updateField(updateRequest.getTitle(), event::setTitle);
+        updateField(updateRequest.getAnnotation(), event::setAnnotation);
+        updateField(updateRequest.getDescription(), event::setDescription);
+        updateField(updateRequest.getEventDate(), event::setEventDate);
+        updateField(updateRequest.getLocation(), event::setLocation);
+        updateField(updateRequest.getPaid(), event::setPaid);
+        updateField(updateRequest.getParticipantLimit(), event::setParticipantLimit);
     }
 }

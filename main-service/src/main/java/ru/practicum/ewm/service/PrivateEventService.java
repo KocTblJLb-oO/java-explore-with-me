@@ -1,6 +1,7 @@
 package ru.practicum.ewm.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -11,6 +12,7 @@ import ewm.StatsClient;
 import ru.practicum.ewm.dto.*;
 import ru.practicum.ewm.enums.EventState;
 import ru.practicum.ewm.enums.RequestStatus;
+import ru.practicum.ewm.enums.StateAction;
 import ru.practicum.ewm.enums.UserStateAction;
 import ru.practicum.ewm.exception.ValidationException;
 import ru.practicum.ewm.mapper.EventMapper;
@@ -30,6 +32,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PrivateEventService {
@@ -48,6 +51,7 @@ public class PrivateEventService {
 
     @Transactional
     public EventFullDto createEvent(Long userId, NewEventDto newEventDto) {
+        log.info("createEvent. Пользователь: {}, событие: {}", userId, newEventDto);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ValidationException("Пользователь с id " + userId + " не найден",
                         HttpStatus.NOT_FOUND));
@@ -56,9 +60,7 @@ public class PrivateEventService {
                 .orElseThrow(() -> new ValidationException("Категория с id " + newEventDto.getCategory() +
                         " не найдена", HttpStatus.NOT_FOUND));
 
-        Event event = eventMapper.toEvent(newEventDto);
-        event.setInitiator(user);
-        event.setCategory(category);
+        Event event = eventMapper.toEvent(newEventDto, user, category);
         event.setCreatedOn(LocalDateTime.now());
 
         event = eventRepository.save(event);
@@ -71,44 +73,8 @@ public class PrivateEventService {
                 .orElseThrow(() -> new ValidationException("Событие с id " + eventId + " не найдено",
                         HttpStatus.NOT_FOUND));
 
-        if (!event.getInitiator().getId().equals(userId)) {
-            throw new ValidationException("Изменять событие может только инициатор", HttpStatus.FORBIDDEN);
-        }
-
-        if (event.getState() == EventState.PUBLISHED) {
-            throw new ValidationException("Опубликованное событие нельзя редактировать", HttpStatus.CONFLICT);
-        }
-
-        if (event.getState() != EventState.PENDING && event.getState() != EventState.CANCELED) {
-            throw new ValidationException("Изменять можно только отменённые события или события в ожидании публикации",
-                    HttpStatus.CONFLICT);
-        }
-
-        if (updateRequest.getEventDate() != null &&
-                updateRequest.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
-            throw new ValidationException("Дата и время события не могут быть раньше, чем через 2 часа " +
-                    "от текущего момента",
-                    HttpStatus.BAD_REQUEST);
-        }
-
-        updateField(updateRequest.getTitle(), event::setTitle);
-        updateField(updateRequest.getAnnotation(), event::setAnnotation);
-        updateField(updateRequest.getDescription(), event::setDescription);
-
-        if (updateRequest.getCategory() != null) {
-            var category = categoryRepository.getCategoryById(updateRequest.getCategory());
-            if (category == null) {
-                throw new ValidationException("Категории " + updateRequest.getCategory() + "не существвует",
-                        HttpStatus.NOT_FOUND);
-            }
-            event.setCategory(category);
-        }
-
-        updateField(updateRequest.getEventDate(), event::setEventDate);
-        updateField(updateRequest.getLocation(), event::setLocation);
-        updateField(updateRequest.getPaid(), event::setPaid);
-        updateField(updateRequest.getParticipantLimit(), event::setParticipantLimit);
-
+        checkEventUpdate(userId, event, updateRequest);
+        updateEvenField(event, updateRequest);
         event.setState(Optional.ofNullable(updateRequest.getStateAction())
                 .map(statusMap::get)
                 .orElse(EventState.PENDING));
@@ -157,6 +123,7 @@ public class PrivateEventService {
 
     @Transactional(readOnly = true)
     public EventFullDto getUserEventById(Long userId, Long eventId) {
+        log.info("getUserEventById. Пользователь: {}, событие: {}", userId, eventId);
         Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new ValidationException("Событие с id=" + eventId + " не найдено или не " +
                         "принадлежит пользователю id " + userId, HttpStatus.NOT_FOUND));
@@ -185,7 +152,50 @@ public class PrivateEventService {
                 ));
     }
 
+    // ------------------------------------------------
+
     private <T> void updateField(T value, Consumer<T> setter) {
         if (value != null) setter.accept(value);
+    }
+
+    private void checkEventUpdate(Long userId, Event event, UpdateEventUserRequest updateRequest) {
+        if (!event.getInitiator().getId().equals(userId)) {
+            throw new ValidationException("Изменять событие может только инициатор", HttpStatus.FORBIDDEN);
+        }
+
+        if (event.getState() == EventState.PUBLISHED) {
+            throw new ValidationException("Опубликованное событие нельзя редактировать", HttpStatus.CONFLICT);
+        }
+
+        if (event.getState() != EventState.PENDING && event.getState() != EventState.CANCELED) {
+            throw new ValidationException("Изменять можно только отменённые события или события в ожидании публикации",
+                    HttpStatus.CONFLICT);
+        }
+
+        if (updateRequest.getEventDate() != null &&
+                updateRequest.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
+            throw new ValidationException("Дата и время события не могут быть раньше, чем через 2 часа " +
+                    "от текущего момента",
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        if (updateRequest.getCategory() != null) {
+            var category = categoryRepository.getCategoryById(updateRequest.getCategory());
+            if (category == null) {
+                throw new ValidationException("Категории " + updateRequest.getCategory() + "не существвует",
+                        HttpStatus.NOT_FOUND);
+            }
+            event.setCategory(category);
+        }
+    }
+
+    private void updateEvenField(Event event, UpdateEventUserRequest updateRequest) {
+        updateField(updateRequest.getTitle(), event::setTitle);
+        updateField(updateRequest.getAnnotation(), event::setAnnotation);
+        updateField(updateRequest.getDescription(), event::setDescription);
+        updateField(updateRequest.getEventDate(), event::setEventDate);
+        updateField(updateRequest.getLocation(), event::setLocation);
+        updateField(updateRequest.getPaid(), event::setPaid);
+        updateField(updateRequest.getParticipantLimit(), event::setParticipantLimit);
     }
 }

@@ -2,6 +2,7 @@ package ru.practicum.ewm.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.dto.EventFullDto;
@@ -12,6 +13,7 @@ import ru.practicum.ewm.service.AdminEventService;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/admin/events")
 @RequiredArgsConstructor
@@ -34,7 +36,7 @@ public class AdminEventController {
     public EventFullDto updateEvent(
             @PathVariable Long eventId,
             @Valid @RequestBody UpdateEventAdminRequest updateRequest) {
-
+        log.info("updateEvent. eventId: {}, Обновлённое мероприятие: {}", eventId, updateRequest);
         return adminEventService.updateEvent(eventId, updateRequest);
     }
 }
