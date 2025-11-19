@@ -12,7 +12,6 @@ import ewm.StatsClient;
 import ru.practicum.ewm.dto.*;
 import ru.practicum.ewm.enums.EventState;
 import ru.practicum.ewm.enums.RequestStatus;
-import ru.practicum.ewm.enums.StateAction;
 import ru.practicum.ewm.enums.UserStateAction;
 import ru.practicum.ewm.exception.ValidationException;
 import ru.practicum.ewm.mapper.EventMapper;
