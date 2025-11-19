@@ -23,7 +23,9 @@ public class AdminUserController {
             @RequestParam(required = false) List<Long> ids,
             @RequestParam(defaultValue = "0") int from,
             @RequestParam(defaultValue = "10") int size) {
-        log.info("getUsers. Получение пользователей. Количество ИД: {}, смещение: {}, количество: {}", ids.size(), from, size);
+        int idsCount = (ids == null) ? 0 : ids.size();
+        log.info("getUsers. Получение пользователей. Количество ИД: {}, смещение: {}, количество: {}", idsCount, from, size);
+
         return userService.getUsers(ids, from, size);
     }
 
