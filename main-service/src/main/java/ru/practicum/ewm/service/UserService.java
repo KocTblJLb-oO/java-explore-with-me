@@ -26,7 +26,8 @@ public class UserService {
     private final UserMapper userMapper;
 
     public List<UserDto> getUsers(List<Long> ids, int from, int size) {
-        log.info("getUsers. Получение пользователей. Количество ИД: {}, смещение: {}, количество: {}", ids.size(), from, size);
+        int idsCount = (ids == null) ? 0 : ids.size();
+        log.info("getUsers. Получение пользователей. Количество ИД: {}, смещение: {}, количество: {}", idsCount, from, size);
         Pageable pageable = PageRequest.of(from / size, size);
         List<User> users;
         if (ids == null || ids.isEmpty()) {

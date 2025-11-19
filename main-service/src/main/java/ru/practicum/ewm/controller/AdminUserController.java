@@ -26,6 +26,7 @@ public class AdminUserController {
         int idsCount = (ids == null) ? 0 : ids.size();
         log.info("getUsers. Получение пользователей. Количество ИД: {}, смещение: {}, количество: {}", idsCount, from, size);
 
+        assert ids != null;
         return userService.getUsers(ids, from, size);
     }
 
