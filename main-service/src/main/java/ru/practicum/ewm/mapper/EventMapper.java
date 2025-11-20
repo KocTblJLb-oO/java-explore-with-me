@@ -60,6 +60,18 @@ public class EventMapper {
                 .build();
     }
 
+    public Event toEvent(EventShortDto eventShortDto) {
+        return Event.builder()
+                .id(eventShortDto.getId())
+                .annotation(eventShortDto.getAnnotation())
+                .category(categoryMapper.toCategory(eventShortDto.getCategory()))
+                .eventDate(eventShortDto.getEventDate())
+                .initiator(userMapper.toUser(eventShortDto.getInitiator()))
+                .paid(eventShortDto.getPaid())
+                .title(eventShortDto.getTitle())
+                .build();
+    }
+
     public Set<EventShortDto> toEventShortDtoSet(Set<Event> events) {
         return events.stream()
                 .map(this::toEventShortDto)

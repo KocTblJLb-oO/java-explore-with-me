@@ -9,17 +9,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ewm.StatsClient;
-import ru.practicum.ewm.dto.EventFullDto;
-import ru.practicum.ewm.dto.StatsRequest;
-import ru.practicum.ewm.dto.UpdateEventAdminRequest;
-import ru.practicum.ewm.dto.ViewStats;
+import ru.practicum.ewm.dto.*;
 import ru.practicum.ewm.enums.EventState;
 import ru.practicum.ewm.enums.RequestStatus;
 import ru.practicum.ewm.enums.StateAction;
 import ru.practicum.ewm.exception.ValidationException;
+import ru.practicum.ewm.mapper.CommentMapper;
 import ru.practicum.ewm.mapper.EventMapper;
 import ru.practicum.ewm.model.Event;
 import ru.practicum.ewm.repository.CategoryRepository;
+import ru.practicum.ewm.repository.CommentRepository;
 import ru.practicum.ewm.repository.EventRepository;
 import ru.practicum.ewm.repository.ParticipationRequestRepository;
 
@@ -45,6 +44,8 @@ public class AdminEventService {
     private final CategoryRepository categoryRepository;
     private final ParticipationRequestRepository participationRequestRepository;
     private final StatsClient statsClient;
+    private final CommentRepository commentRepository;
+    private final CommentMapper commentMapper;
 
     public List<EventFullDto> getEvents(List<Long> users, List<EventState> states, List<Long> categories,
                                         LocalDateTime rangeStart, LocalDateTime rangeEnd, int from, int size) {
@@ -96,6 +97,9 @@ public class AdminEventService {
                     EventFullDto dto = eventMapper.toEventFullDto(event);
                     dto.setConfirmedRequests(confirmedRequestsMap.getOrDefault(event.getId(), 0L));
                     dto.setViews(viewsMap.getOrDefault("/events/" + event.getId(), 0L));
+                    List<CommentEventDto> commentEventDto = commentMapper
+                            .toCommentEventDto(commentRepository.findAllByEventId(event.getId()));
+                    dto.setComments(commentEventDto);
                     return dto;
                 }).collect(Collectors.toList());
     }
@@ -148,6 +152,10 @@ public class AdminEventService {
         } else {
             dto.setViews(0L);
         }
+
+        List<CommentEventDto> commentEventDto = commentMapper
+                .toCommentEventDto(commentRepository.findAllByEventId(event.getId()));
+        dto.setComments(commentEventDto);
 
         return dto;
     }

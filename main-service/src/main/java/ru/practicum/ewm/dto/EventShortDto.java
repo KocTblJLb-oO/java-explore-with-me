@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @SuperBuilder
@@ -37,4 +38,6 @@ public class EventShortDto {
     private long confirmedRequests;
 
     private long views;
+
+    private List<CommentEventDto> comments;
 }
