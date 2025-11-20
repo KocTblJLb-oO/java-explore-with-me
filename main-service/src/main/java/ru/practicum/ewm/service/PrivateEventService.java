@@ -14,14 +14,12 @@ import ru.practicum.ewm.enums.EventState;
 import ru.practicum.ewm.enums.RequestStatus;
 import ru.practicum.ewm.enums.UserStateAction;
 import ru.practicum.ewm.exception.ValidationException;
+import ru.practicum.ewm.mapper.CommentMapper;
 import ru.practicum.ewm.mapper.EventMapper;
 import ru.practicum.ewm.model.Category;
 import ru.practicum.ewm.model.Event;
 import ru.practicum.ewm.model.User;
-import ru.practicum.ewm.repository.CategoryRepository;
-import ru.practicum.ewm.repository.EventRepository;
-import ru.practicum.ewm.repository.ParticipationRequestRepository;
-import ru.practicum.ewm.repository.UserRepository;
+import ru.practicum.ewm.repository.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -42,6 +40,8 @@ public class PrivateEventService {
     private final UserRepository userRepository;
     private final ParticipationRequestRepository participationRequestRepository;
     private final StatsClient statsClient;
+    private final CommentRepository commentRepository;
+    private final CommentMapper commentMapper;
 
     private static final Map<UserStateAction, EventState> statusMap = Map.of(
             UserStateAction.CANCEL_REVIEW, EventState.CANCELED,
@@ -116,6 +116,9 @@ public class PrivateEventService {
                     EventShortDto dto = eventMapper.toEventShortDto(event);
                     dto.setConfirmedRequests(confirmedRequestsMap.getOrDefault(event.getId(), 0L));
                     dto.setViews(viewsMap.getOrDefault("/events/" + event.getId(), 0L));
+                    List<CommentEventDto> commentEventDto = commentMapper
+                            .toCommentEventDto(commentRepository.findAllByEventId(event.getId()));
+                    dto.setComments(commentEventDto);
                     return dto;
                 }).collect(Collectors.toList());
     }
@@ -128,8 +131,13 @@ public class PrivateEventService {
                         "принадлежит пользователю id " + userId, HttpStatus.NOT_FOUND));
 
         EventFullDto eventFullDto = eventMapper.toEventFullDto(event);
-        eventFullDto.setConfirmedRequests(participationRequestRepository.countByEventAndStatus(eventId,
+                eventFullDto.setConfirmedRequests(participationRequestRepository.countByEventAndStatus(eventId,
                 RequestStatus.CONFIRMED));
+
+        List<CommentEventDto> commentEventDto = commentMapper
+                .toCommentEventDto(commentRepository.findAllByEventId(eventId));
+
+        eventFullDto.setComments(commentEventDto);
         StatsRequest statsRequest = StatsRequest.builder()
                 .uris(Set.of("/events/" + eventId))
                 .unique(true)
